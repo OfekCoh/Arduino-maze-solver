@@ -1,5 +1,4 @@
 import heapq
-from collections import deque
 from constants import DIRECTIONS
 from flood_fill import is_valid
 
