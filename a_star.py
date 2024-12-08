@@ -7,7 +7,7 @@ from flood_fill import is_valid
 def heuristic(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-# a* algorithm to find the shortest path between current location and target (djikstra like)
+# a* algoriathm to find the shortest path between current location and target (djikstra like)
 def a_star_distance(maze, start, target):
     piority_queue = []  # priority queue (min-heap)
     came_from = {}  # for path reconstruction
