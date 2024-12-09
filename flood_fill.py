@@ -1,6 +1,6 @@
 from collections import deque # for bfs
 from constants import MAZE_HEIGHT, MAZE_WIDTH, DIRECTIONS
-# import queue # to keep optimal route
+
 
 # calculate distance from all cells to target using bfs (no wall between cells is like edge between vertices)
 def calculate_distances(maze, target):
@@ -37,13 +37,13 @@ def flood_fill(maze, start, target, robot_maze, robot_locations_queue, distances
     # calculate the distances from target in the current maze (the robot doesnt know where are the walls)
     distances = calculate_distances(robot_maze, target)
     
+    min_distance = -1 # keep minimum neighbor distance to choose next step
+    
     # insert first position to the robot route queue
     robot_locations_queue.put(current_position)
     distances_queue.put(distances)
     
-    # visited_once = deque() # keep the cells we visited once, this will be the current shortest route and visited_once size its length
-
-    while True: # go until find exit
+    while True: # go until reaches target
         
         x, y = current_position
         
@@ -64,15 +64,15 @@ def flood_fill(maze, start, target, robot_maze, robot_locations_queue, distances
                 neighbors.append((nx, ny))
 
         # move to the neighbor with the shortest distance to the target
-        current_position = min(neighbors, key=lambda pos: distances[pos[1]][pos[0]])
+        for neighbor in neighbors:
+            if distances[neighbor[1]][neighbor[0]] <= min_distance or min_distance == -1:
+                if neighbor == current_position and distances[neighbor[1]][neighbor[0]] == min_distance: # helps to prevent uneccecary backtracking
+                    continue
+                potential_current_position = neighbor
+                min_distance = distances[neighbor[1]][neighbor[0]]
         
-        # # remove backtracking from visited once queue
-        # if len(visited_once) > 0 and visited_once[-1] == current_position:
-        #     visited_once.pop()
-        # else:
-        #     visited_once.append(current_position)
-            
-       
+        current_position = potential_current_position # update current position
+        min_distance = -1 # reset min_distance
         robot_locations_queue.put(current_position)
         distances_queue.put(distances)
         # if the robot discovered a wall during this iteration, recalculate distances for all cells

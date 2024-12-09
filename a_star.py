@@ -54,20 +54,18 @@ def a_star_distance(maze, start, target):
 # the robot movement algorithm, explore the maze and move towards target
 def dynamic_a_star(maze, start, target, robot_maze, robot_locations_queue):
     
-    current_position = start
     found_new_walls = False # if weve found new walls this iteration
-    route_to_target = a_star_distance(robot_maze, current_position, target) # find shortest route to target from current position
+    route_to_target = a_star_distance(robot_maze, start, target) # find shortest route to target from current position
 
     # insert first position to the robot route queue
-    robot_locations_queue.put(current_position)
+    robot_locations_queue.put(start)
 
     while True: # go until find exit
         
         current_position = route_to_target.pop()
         robot_locations_queue.put(current_position)      
         
-        print(current_position) # test
-
+        
         # if the robot reaches the target finish algorithm 
         if current_position == target:
             return
