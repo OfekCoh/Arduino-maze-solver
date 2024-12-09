@@ -11,9 +11,9 @@ FLOOD_FILL = 'f'
 A_STAR = 'a'
 
 # constants for the screen
-WINDOW_WIDTH = 800  # width of the window
-WINDOW_HEIGHT = 800  # height of the window
 CELL_SIZE = 40  # size of each cell in the grid (pixels)
+WINDOW_WIDTH = MAZE_WIDTH * CELL_SIZE  # width of the window
+WINDOW_HEIGHT = MAZE_HEIGHT * CELL_SIZE  # height of the window
 
 # colors
 WHITE = (255, 255, 255)
@@ -101,26 +101,29 @@ def draw_maze(distances = None):
 # simulate the robot solving the maze
 def robot_movement_simulation(robot_locations_queue, distances_queue = None):
 
-    print(robot_locations_queue)# test
-
+    pause = True # pause at key press
+    
     # first step
     robot_location = robot_locations_queue.get() # moves the robot
     if distances_queue != None:# get the new distance matrix if flood fill    
         distance_matrix = distances_queue.get()
         
-    # next steps after press 'a'
     while True:         
         
         # key pressed
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:  # check if a key was pressed
-                if event.key == pygame.K_a:  # check if the 'a' key was pressed, move another step
-                    maze[robot_location[1]][robot_location[0]] = 0 # clean previous robot location  
-                    robot_location = robot_locations_queue.get() # moves the robot
-                    if distances_queue != None:# get the new distance matrix if flood fill    
-                        distance_matrix = distances_queue.get()
+                if event.key == pygame.K_SPACE:  # pause and unpause if space was pressed
+                    pause = not pause        
+                if event.key == pygame.K_d:
+                    pygame.quit()
+        if pause == False:
+            maze[robot_location[1]][robot_location[0]] = 0 # clean previous robot location  
+            robot_location = robot_locations_queue.get() # moves the robot
+            if distances_queue != None:# get the new distance matrix if flood fill    
+                distance_matrix = distances_queue.get()
         
-        
+            
         # marks the robot location in this stage for printing
         if(robot_locations_queue.empty() == True): # the simulation has finished
              # reset maze
@@ -149,7 +152,23 @@ def robot_movement_simulation(robot_locations_queue, distances_queue = None):
 def a_star_solve(robot_locations_queue, robot_maze):
     dynamic_a_star(maze, start, target, robot_maze,robot_locations_queue) # solve the maze using flood fill   
     robot_movement_simulation(robot_locations_queue)
-
+    
+    # iterate untill shortest path was found
+    while True:   
+        
+        # solve the maze backwards to try and find better route
+        dynamic_a_star(maze, target, start, robot_maze, robot_locations_queue) 
+        route_length = robot_locations_queue.qsize() # the current length of the route 
+        robot_movement_simulation(robot_locations_queue)
+        
+        # solve the maze again to try and find better route and finish at target
+        dynamic_a_star(maze, start, target, robot_maze, robot_locations_queue) 
+        
+        # check if weve found the optimal route (the route doesnt improve after iterations)
+        if route_length <= robot_locations_queue.qsize(): 
+            robot_movement_simulation(robot_locations_queue)
+            return
+        robot_movement_simulation(robot_locations_queue)
 
 
 # find shortest path using flood fill
@@ -170,7 +189,6 @@ def flood_fill_solve(robot_locations_queue, robot_maze):
         flood_fill(maze, start, target, robot_maze, robot_locations_queue, distances_queue) 
         
         # check if weve found the optimal route (the route doesnt improve after iterations)
-        print(robot_locations_queue.qsize())
         if route_length <= robot_locations_queue.qsize(): 
             robot_movement_simulation(robot_locations_queue, distances_queue)
             return
@@ -179,13 +197,19 @@ def flood_fill_solve(robot_locations_queue, robot_maze):
 # main loop to display the maze
 def main():
     
+    # choose which algorithm to use
+    algorithm = input("choose an algorithm (a or f):")
+    print("press space to pause/unpause")
+
     # solve the maze and keep the robot's route in a queue for visualization
     robot_locations_queue = queue.Queue()
     robot_maze = [[0] * MAZE_WIDTH for _ in range(MAZE_HEIGHT)]  # initilize robot maze matrix to 0 (unvisited cells) 
     
-    
-    flood_fill_solve(robot_locations_queue, robot_maze)
-    a_star_solve(robot_locations_queue, robot_maze)
+    # solve maze using chosen algorithm
+    if algorithm == "f":
+        flood_fill_solve(robot_locations_queue, robot_maze)
+    else:
+        a_star_solve(robot_locations_queue, robot_maze)
 
     pygame.quit() 
 

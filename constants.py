@@ -1,6 +1,6 @@
 # maze dimentions
-MAZE_HEIGHT = 10
-MAZE_WIDTH = 10
+MAZE_HEIGHT = 20
+MAZE_WIDTH = 20
 
 # directions for moving in the maze (right, down, left, up)
 DIRECTIONS = [(0, 1), (1, 0), (0, -1), (-1, 0)]
