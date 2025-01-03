@@ -5,6 +5,7 @@ AF_DCMotor motor1(4); // Front-Left Motor
 AF_DCMotor motor2(3); // Front-Right Motor
 AF_DCMotor motor3(1); // Rear-Left Motor
 AF_DCMotor motor4(2); // Rear-Right Motor
+
 // Ultrasonic Sensor Pins
 const int trigFront = A0;
 const int echoFront = A1;
@@ -18,8 +19,9 @@ const int echoRight = A3;
 // Threshold distance (in cm)
 const int safeDistance  = 5;
 
-// rotation duration
-#define ROTATION_DURATION 1000
+// movement duration
+#define ROTATION_DURATION 2000
+#define FORWARD_DURATION 500
 
 // Function to measure distance from ultrasonic sensor
 long measureDistance(int trigPin, int echoPin) {
@@ -37,10 +39,10 @@ long measureDistance(int trigPin, int echoPin) {
 // Setup
 void setup() {
   // Initialize motors
-  motor1.setSpeed(150); // Speed ranges from 0-255
-  motor2.setSpeed(150);
-  motor3.setSpeed(150);
-  motor4.setSpeed(150);
+  motor1.setSpeed(100); // Speed ranges from 0-255
+  motor2.setSpeed(100);
+  motor3.setSpeed(100);
+  motor4.setSpeed(100);
 
   // Initialize ultrasonic sensor pins
   pinMode(trigFront, OUTPUT);
@@ -70,16 +72,10 @@ void moveForward() {
   motor2.run(FORWARD);
   motor3.run(FORWARD);
   motor4.run(FORWARD);
+  delay(FORWARD_DURATION);
+  stopMotors();
 }
 
-// Function to move backward
-void moveBackward() {
-  Serial.println("back ");
-  motor1.run(BACKWARD);
-  motor2.run(BACKWARD);
-  motor3.run(BACKWARD);
-  motor4.run(BACKWARD);
-}
 
 // Function to rotate left
 void rotateLeft() {
@@ -102,6 +98,7 @@ void rotateRight() {
   delay(ROTATION_DURATION);
   stopMotors();
 }
+ bool turn = true;
 
 // Loop
 void loop() {
@@ -114,13 +111,19 @@ void loop() {
   Serial.print("Front: ");  Serial.print(frontDistance); Serial.print(" cm, ");
   Serial.print("Left: ");   Serial.print(leftDistance); Serial.print(" cm, ");
   Serial.print("Right: ");  Serial.println(rightDistance);
-
   
-  // Decision-making
-  //push car
-  if (frontDistance < safeDistance) {
-    rotate_left; // Obstacle in front, rotate left
-  } 
-      
+  delay(1000); // Small delay for stability
+ 
+  if(turn){
+    // Decision-makin
+    rotateLeft();
+    delay(1000);
+    moveForward();
+    delay(1000);
+    rotateRight();
+    delay(1000);
+  }
+  turn = false; 
+  stopMotors();
   delay(100); // Small delay for stability
 }
