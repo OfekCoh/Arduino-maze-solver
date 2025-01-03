@@ -1,0 +1,178 @@
+
+#include <iostream>
+#include <vector> // for matrix
+#include <queue> // queue for bfs
+#include "Constants.h"
+
+// for comfort
+using std::queue;
+using std::vector;
+
+// check if  a point is inside the maze
+bool isValid(const vector<uint8_t>& point);
+
+// calculate distance from all cells to target using bfs (no wall between cells is like edge between vertices)
+void calculate_distance(const vector<vector<uint8_t>>& maze, const vector<uint8_t>& target, vector<vector<uint8_t>>& distances);
+
+// the robot movement algorithm, map the maze and move towards target using the cell with the minimum distance from the target each iteration
+void flood_fill(const vector<vector<uint8_t>>& maze, vector<vector<uint8_t>>& robot_maze, const vector<uint8_t>& start, const vector<uint8_t>& target);
+
+
+uint8_t main()
+{
+    // define a 10x10 maze using vector initialization
+    vector<std::vector<uint8_t>> maze = {
+        {0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 0, 0, 1, 1, 1, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 0, 0, 0, 1},
+        {1, 0, 1, 1, 1, 1, 1, 1, 0, 1},
+        {1, 0, 0, 0, 0, 1, 0, 0, 0, 1},
+        {1, 1, 1, 1, 0, 0, 0, 1, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
+
+    // pruint8_t the maze
+    for (const auto& row : maze) {
+        for (uint8_t cell : row) {
+            std::cout << (cell == 1 ? "1" : "0") << " "; // Pruint8_t '#' for walls and ' ' for paths
+        }
+        std::cout << std::endl;
+    }
+    vector<uint8_t> start = { 0,0 };
+    vector<uint8_t> target = { 8,8 };
+
+    // initilize the robots maze to be without walls 
+    vector<vector<uint8_t>> robot_maze(MAZE_HEIGHT, vector<uint8_t>(MAZE_WIDTH, 0));
+    flood_fill(maze, robot_maze, start, target);
+    return 0;
+}
+
+
+
+
+// calculate distance from all cells to target using bfs (no wall between cells is like edge between vertices)
+void calculate_distance(const vector<vector<uint8_t>>& maze, const vector<uint8_t>& target, vector<vector<uint8_t>>& distances) {
+
+    uint8_t current_distance; //used to keep current cells distance to calculate next cells
+    vector<uint8_t> current_point(2);//the points well be checking 
+    vector<uint8_t> neighbor(2);
+
+    // reset distances matrix, 5 mark unvisited cells
+    for (auto& row : distances) {
+        std::fill(row.begin(), row.end(), 5);
+    }
+    queue<vector<uint8_t>> bfs_queue; // a queue of cell coardinets (2 size vector), to manage searched cells
+
+    distances[target[1]][target[0]] = 0; // the distance from the target to itself
+    bfs_queue.push(target);
+
+
+    //bfs loop
+    while (!bfs_queue.empty()) {
+
+        current_point = bfs_queue.front(); // retrive the current point to calculate
+        bfs_queue.pop();
+        current_distance = distances[current_point[1]][current_point[0]];// current point distance from target used to calculate the distance form its neighbors
+
+        // check every cell's neighbors
+        for (auto direction : directions) {
+
+            neighbor[0] = current_point[0] + direction[0];
+            neighbor[1] = current_point[1] + direction[1];
+            if (isValid(neighbor)) { // if the neighbor is inside the maze
+
+                // if the neighbor isnt a wall and unvisited
+                if (maze[neighbor[1]][neighbor[0]] == 0 && distances[neighbor[1]][neighbor[0]] == 5) {
+                    distances[neighbor[1]][neighbor[0]] = current_distance + 1;
+                    bfs_queue.push(neighbor);
+                }
+
+            }
+        }
+    }
+}
+// the robot movement algorithm, map the maze and move towards target using the cell with the minimum distance from the target each iteration
+void flood_fill(const vector<vector<uint8_t>>& maze, vector<vector<uint8_t>>& robot_maze, const vector<uint8_t>& start, const vector<uint8_t>& target){
+
+    bool walls_found = false;// to check if new walls was found this iteration, to update distances
+    vector<uint8_t> current_position = start; // the robot starting position
+    vector<vector<uint8_t>> distances(MAZE_HEIGHT, vector<uint8_t>(MAZE_WIDTH, 0)); // create the distances matrix, and update it with the current maze according to teh robot
+    calculate_distance(robot_maze, target, distances);
+
+    uint8_t min_distance = -1; // to find the neighbor with the lowest distance to move to, -1 for not initilized
+    vector<uint8_t> neighbor(2);
+    vector<uint8_t> min_distance_neighbor(2);
+
+    //robot movement loop, untill it reaches target
+    while (true) {
+
+        if (current_position == target) {// finish if the robot reached target
+            return;
+        }
+
+        // check cell's neighbors to decide where to move and find walls
+        for (auto direction : directions) {
+            neighbor[0] = current_position[0] + direction[0];
+            neighbor[1] = current_position[1] + direction[1];
+            if (isValid(neighbor)) { // if the neighbor is inside the maze
+
+                // if a new wall was discovered update the robot's maze
+                if (maze[neighbor[1]][neighbor[0]] == 1 && robot_maze[neighbor[1]][neighbor[0]] != 1) {
+                    robot_maze[neighbor[1]][neighbor[0]] = 1;
+                    walls_found = true;
+                }
+                else {
+                    // update the current position to be the free neighbor closest to the target
+                    if (distances[neighbor[1]][neighbor[0]] < min_distance || min_distance == -1) {
+                        min_distance = distances[neighbor[1]][neighbor[0]];
+                        min_distance_neighbor = neighbor;
+                    }
+                }
+            }
+        }
+        // update the distances matrix if new walls were found
+        if (walls_found) {
+            calculate_distance(robot_maze, target, distances);
+            walls_found = false;
+        }
+        else {
+            current_position = min_distance_neighbor;// move robot to the neighbor thats closest to the target
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////// for testing
+        // pruint8_t the maze with 3 as the current robot location
+        for (uint8_t i = 0; i < MAZE_HEIGHT; i++)
+        {
+            for (uint8_t j = 0; j < MAZE_WIDTH; j++) {
+                if (current_position[0] == j && current_position[1] == i) {
+                    std::cout << "3 ";
+                }
+                else {
+                    if (maze[i][j] == 1) {
+                        std::cout << "1 ";
+                    }
+                    else {
+                        std::cout << "0 ";
+                    }
+                }
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << (int)current_position[0] << "," << (int)current_position[1] << std::endl;
+        std::cout << std::endl;
+        std::cout << std::endl;
+        ///////////////////////////////////////////////////////////////////////////////
+
+        min_distance = -1; // resets the minimum distance for next iteration
+    }
+}
+
+// check if  a point is inside the maze
+bool isValid(const vector<uint8_t>& point) {
+    return 0 <= point[1] && point[1] < MAZE_HEIGHT && 0 <= point[0] && point[0] < MAZE_WIDTH;
+}
