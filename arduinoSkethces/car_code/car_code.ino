@@ -90,9 +90,20 @@ void stopMotors() {
   motor4.run(RELEASE);
 }
 
+// fuction to turn around
+void moveBackward() {
+  Serial.println("forward ");
+  motor1.run(BACKWARD);
+  motor2.run(BACKWARD);
+  motor3.run(BACKWARD);
+  motor4.run(BACKWARD);
+  delay(FORWARD_DURATION);
+  stopMotors();
+}
+
 // Function to move forward
 void moveForward() {
-  Serial.println("farward ");
+  Serial.println("forward ");
   motor1.run(FORWARD);
   motor2.run(FORWARD);
   motor3.run(FORWARD);
@@ -275,7 +286,7 @@ vector<uint8_t> front_wall_location(const vector<uint8_t>& currentLocation, int 
 }
 
 // handle sensors reading and update robot maze if needed
-bool find_new_walls(long frontDistance, long rightDistance, long leftDistance, vector<vector<uint8_t>>& robot_maze, const vector<uint8_t>&  currentLocation, int currentDirection,const vector<vector<uint8_t>>& maze) {
+bool find_new_walls(long frontDistance, long rightDistance, long leftDistance, vector<vector<uint8_t>>& robot_maze, const vector<uint8_t>&  currentLocation, int currentDirection) {
 
     vector<uint8_t> new_wall;// new wall potential location 
     bool wall_found = false; // check if new wall was found
@@ -319,81 +330,95 @@ bool find_new_walls(long frontDistance, long rightDistance, long leftDistance, v
 // move robot according to cells direction and current robots direction
 void facingNORTH(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation) {
     if (currentLocation[0] < nextLocation[0]) {
-        //rotateRight();
+        rotateRight();
         std::cout << "right" << std::endl;
     }
     if (currentLocation[0] > nextLocation[0]) {
-        //rotateLeft();
+        rotateLeft();
         std::cout << "left" << std::endl;
     }
     if (currentLocation[1] < nextLocation[1]) {
-        //moveForward();
+        moveForward();
         std::cout << "forward" << std::endl;
     }
     if (currentLocation[1] > nextLocation[1]) {
-        //moveBackward();
+        moveBackward();
         std::cout << "back" << std::endl;
     }
 }
 
 void facingSOUTH(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation) {
     if (currentLocation[0] < nextLocation[0]) {
-        //rotateLeft();
+        rotateLeft();
         std::cout << "left" << std::endl;
     }
     if (currentLocation[0] > nextLocation[0]) {
-        //rotateRight();
+        rotateRight();
         std::cout << "right" << std::endl;
     }
     if (currentLocation[1] < nextLocation[1]) {
-        //moveForward();
+        moveForward();
         std::cout << "back" << std::endl;
     }
     if (currentLocation[1] > nextLocation[1]) {
-        //moveBackward();
+        moveBackward();
         std::cout << "forward" << std::endl;
     }
 }
 
 void facingEAST(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation) {
     if (currentLocation[0] < nextLocation[0]) {
-        //moveForward();
+        moveForward();
         std::cout << "forward" << std::endl;
     }
     if (currentLocation[0] > nextLocation[0]) {
-        //moveBackward();
+        moveBackward();
         std::cout << "back" << std::endl;
     }
     if (currentLocation[1] < nextLocation[1]) {
-        //rotateLeft();
+        rotateLeft();
         std::cout << "left" << std::endl;
     }
     if (currentLocation[1] > nextLocation[1]) {
-        //rotateRight();
+        rotateRight();
         std::cout << "right" << std::endl;
     }
 }
 
 void facingWEST(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation) {
     if (currentLocation[0] < nextLocation[0]) {
-        //moveBackward();
+        moveBackward();
         std::cout << "back" << std::endl;
     }
     if (currentLocation[0] > nextLocation[0]) {
-        //moveForward();
+        moveForward();
         std::cout << "forward" << std::endl;
     }
     if (currentLocation[1] < nextLocation[1]) {
-        //rotateRight();
+        rotateRight();
         std::cout << "right" << std::endl;
     }
     if (currentLocation[1] > nextLocation[1]) {
-        //rotateLeft();
+        rotateLeft();
         std::cout << "left" << std::endl;
     }
 }
 
-
+// return the new direction after movement
+int new_direction(const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation) {
+    if (currentLocation[0] < nextLocation[0]) {
+        return EAST;
+    }
+    if (currentLocation[0] > nextLocation[0]) {
+        return WEST;
+    }
+    if (currentLocation[1] < nextLocation[1]) {
+        return NORTH;
+    }
+    if (currentLocation[1] > nextLocation[1]) {
+        return SOUTH;
+    }
+}
 
 /////////////////////////// end of functions
 
@@ -437,18 +462,86 @@ void loop() {
   Serial.print("Left: ");   Serial.print(leftDistance); Serial.print(" cm, ");
   Serial.print("Right: ");  Serial.println(rightDistance);
   
-  delay(1000); // Small delay for stability
- 
-  if(turn){
-    // Decision-makin
-    rotateLeft();
-    delay(1000);
-    moveForward();
-    delay(1000);
-    rotateRight();
-    delay(1000);
+  if (current_position == target) {// finish if the robot reached target
+    return;
   }
-  turn = false; 
-  stopMotors();
-  delay(100); // Small delay for stability
+
+  // check for walls using the sensors and update maze 
+  walls_found = find_new_walls(frontDistance, rightDistance, leftDistance, robot_maze, current_position, current_direction);
+
+  // check cell's neighbors to decide where to move and find walls
+  for (auto direction : directions) {
+    neighbor[0] = current_position[0] + direction[0];
+    neighbor[1] = current_position[1] + direction[1];
+    
+    if (isValid(neighbor)) { // if the neighbor is inside the maze
+        // if the cell is a wall move to check othe cells
+        if (robot_maze[neighbor[1]][neighbor[0]] != 1) {
+            // update the current position to be the free neighbor closest to the target
+            if (distances[neighbor[1]][neighbor[0]] < min_distance || min_distance == -1) {
+                min_distance = distances[neighbor[1]][neighbor[0]];
+                min_distance_neighbor = neighbor;
+            }
+        }
+    }
+  }
+
+    // update the distances matrix if new walls were found
+  if (walls_found) {
+      calculate_distance(robot_maze, target, distances);
+      walls_found = false;
+  }
+  else {
+      // move robot according to its current duration
+      switch (current_direction){
+      case NORTH:
+          facingNORTH(current_direction, current_position, min_distance_neighbor);
+          break;
+
+      case SOUTH:
+          facingSOUTH(current_direction, current_position, min_distance_neighbor);
+          break;
+
+      case WEST:
+          facingWEST(current_direction, current_position, min_distance_neighbor);
+          break;
+      
+      case EAST:
+          facingEAST(current_direction, current_position, min_distance_neighbor);
+          break;
+      default:
+          break;
+      }
+
+      ////////////////////////////////////// for debug
+      // send the robot maze using serial bluetooth the maze with 3 as the current robot location
+      for (int i = MAZE_HEIGHT - 1; i >= 0; i--)
+      {
+        for (int j = 0; j < MAZE_WIDTH; j++) {
+            if (current_position[0] == j && current_position[1] == i) {
+                Serial.print("3 ");
+            }
+            else {
+                if (robot_maze[i][j] == 1) {
+                    Serial.print("1 ");
+                }
+                else {
+                    Serial.print("0 ");
+                }
+            }
+        }
+        Serial.println();
+      }
+      Serial.println();
+      Serial.println();
+      Serial.println();
+      ///////////////////////////////////// end of debug
+      
+      current_direction = new_direction(current_position, min_distance_neighbor); // update direction
+      current_position = min_distance_neighbor;// move robot to the neighbor thats closest to the target in the robots matrix
+    }       
+    
+    min_distance = -1; // resets the minimum distance for next iteration
+    delay(10); // Small delay for stability
+ 
 }

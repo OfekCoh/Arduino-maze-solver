@@ -34,6 +34,13 @@ bool find_new_walls(vector<vector<uint8_t>>& robot_maze, const vector<uint8_t>& 
 // return the new direction after movement
 int new_direction(const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation);
 
+// move robot according to cells direction and current robots direction
+void facingNORTH(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation);
+void facingSOUTH(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation);
+void facingEAST(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation);
+void facingWEST(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation);
+
+
 // check if  a point is inside the maze
 bool isValid(const std::vector<uint8_t>& point) {
     return 0 <= point[1] && point[1] < MAZE_HEIGHT && 0 <= point[0] && point[0] < MAZE_WIDTH;
@@ -166,8 +173,8 @@ void flood_fill(const vector<vector<uint8_t>>& maze, vector<vector<uint8_t>>& ro
         for (auto direction : directions) {
             neighbor[0] = current_position[0] + direction[0];
             neighbor[1] = current_position[1] + direction[1];
+            
             if (isValid(neighbor)) { // if the neighbor is inside the maze
-
                 // if the cell is a wall move to check othe cells
                 if (robot_maze[neighbor[1]][neighbor[0]] != 1) {
                     // update the current position to be the free neighbor closest to the target
@@ -178,42 +185,63 @@ void flood_fill(const vector<vector<uint8_t>>& maze, vector<vector<uint8_t>>& ro
                 }
             }
         }
+        
         // update the distances matrix if new walls were found
         if (walls_found) {
             calculate_distance(robot_maze, target, distances);
             walls_found = false;
         }
         else {
-            current_direction = new_direction(current_position, min_distance_neighbor); // update direction
-            current_position = min_distance_neighbor;// move robot to the neighbor thats closest to the target
-        }
+            // move robot according to its current duration
+            switch (current_direction){
+            case NORTH:
+                facingNORTH(current_direction, current_position, min_distance_neighbor);
+                break;
 
-        ///////////////////////////////////////////////////////////////////////////////// for testing
-        // pruint8_t the maze with 3 as the current robot location
-        for (uint8_t i = 0; i < MAZE_HEIGHT; i++)
-        {
-            for (uint8_t j = 0; j < MAZE_WIDTH; j++) {
-                if (current_position[0] == j && current_position[1] == i) {
-                    std::cout << "3 ";
-                }
-                else {
-                    if (maze[i][j] == 1) {
-                        std::cout << "1 ";
+            case SOUTH:
+                facingSOUTH(current_direction, current_position, min_distance_neighbor);
+                break;
+
+            case WEST:
+                facingWEST(current_direction, current_position, min_distance_neighbor);
+                break;
+            
+            case EAST:
+                facingEAST(current_direction, current_position, min_distance_neighbor);
+                break;
+            default:
+                break;
+
+            }
+            
+            current_direction = new_direction(current_position, min_distance_neighbor); // update direction
+            current_position = min_distance_neighbor;// move robot to the neighbor thats closest to the target in the robots matrix
+            
+            ///////////////////////////////////////////////////////////////////////////////// for testing
+            // pruint8_t the maze with 3 as the current robot location
+            for (int i = MAZE_HEIGHT - 1; i >= 0; i--)
+            {
+                for (int j = 0; j < MAZE_WIDTH; j++) {
+                    if (current_position[0] == j && current_position[1] == i) {
+                        std::cout << "3 ";
                     }
                     else {
-                        std::cout << "0 ";
+                        if (maze[i][j] == 1) {
+                            std::cout << "1 ";
+                        }
+                        else {
+                            std::cout << "0 ";
+                        }
                     }
                 }
+                std::cout << std::endl;
             }
+            std::cout << (int)current_position[0] << "," << (int)current_position[1] << std::endl;
             std::cout << std::endl;
+            std::cout << std::endl;
+
+            ///////////////////////////////////////////////////////////////////////////////
         }
-        std::cout << std::endl;
-        std::cout << std::endl;
-        std::cout << (int)current_position[0] << "," << (int)current_position[1] << std::endl;
-        std::cout << std::endl;
-        std::cout << std::endl;
-       
-        ///////////////////////////////////////////////////////////////////////////////
 
         min_distance = -1; // resets the minimum distance for next iteration
     }
@@ -230,7 +258,7 @@ int new_direction(const vector<uint8_t>& currentLocation, const vector<uint8_t>&
     if (currentLocation[1] < nextLocation[1]) {
         return NORTH;
     }
-    if (currentLocation[1] < nextLocation[1]) {
+    if (currentLocation[1] > nextLocation[1]) {
         return SOUTH;
     }
 }
@@ -380,9 +408,82 @@ vector<uint8_t> front_wall_location(const vector<uint8_t>& currentLocation, int 
     }
 }
 
+// move robot according to cells direction and current robots direction
+void facingNORTH(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation) {
+    if (currentLocation[0] < nextLocation[0]) {
+        //rotateRight();
+        std::cout << "right" << std::endl;
+    }
+    if (currentLocation[0] > nextLocation[0]) {
+        //rotateLeft();
+        std::cout << "left" << std::endl;
+    }
+    if (currentLocation[1] < nextLocation[1]) {
+        //moveForward();
+        std::cout << "forward" << std::endl;
+    }
+    if (currentLocation[1] > nextLocation[1]) {
+        //moveBackward();
+        std::cout << "back" << std::endl;
+    }
+}
 
+void facingSOUTH(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation) {
+    if (currentLocation[0] < nextLocation[0]) {
+        //rotateLeft();
+        std::cout << "left" << std::endl;
+    }
+    if (currentLocation[0] > nextLocation[0]) {
+        //rotateRight();
+        std::cout << "right" << std::endl;
+    }
+    if (currentLocation[1] < nextLocation[1]) {
+        //moveForward();
+        std::cout << "back" << std::endl;
+    }
+    if (currentLocation[1] > nextLocation[1]) {
+        //moveBackward();
+        std::cout << "forward" << std::endl;
+    }
+}
 
+void facingEAST(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation) {
+    if (currentLocation[0] < nextLocation[0]) {
+        //moveForward();
+        std::cout << "forward" << std::endl;
+    }
+    if (currentLocation[0] > nextLocation[0]) {
+        //moveBackward();
+        std::cout << "back" << std::endl;
+    }
+    if (currentLocation[1] < nextLocation[1]) {
+        //rotateLeft();
+        std::cout << "left" << std::endl;
+    }
+    if (currentLocation[1] > nextLocation[1]) {
+        //rotateRight();
+        std::cout << "right" << std::endl;
+    }
+}
 
+void facingWEST(int currentDirection, const vector<uint8_t>& currentLocation, const vector<uint8_t>& nextLocation) {
+    if (currentLocation[0] < nextLocation[0]) {
+        //moveBackward();
+        std::cout << "back" << std::endl;
+    }
+    if (currentLocation[0] > nextLocation[0]) {
+        //moveForward();
+        std::cout << "forward" << std::endl;
+    }
+    if (currentLocation[1] < nextLocation[1]) {
+        //rotateRight();
+        std::cout << "right" << std::endl;
+    }
+    if (currentLocation[1] > nextLocation[1]) {
+        //rotateLeft();
+        std::cout << "left" << std::endl;
+    }
+}
 
 
 

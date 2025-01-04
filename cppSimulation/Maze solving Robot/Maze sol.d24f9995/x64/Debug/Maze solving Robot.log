@@ -1,6 +1,6 @@
 ﻿  Maze solving Robot.cpp
-C:\Cs\Eobotics project\Cpp\Maze solving Robot\Maze solving Robot.cpp(236,1): warning C4715: 'new_direction': not all control paths return a value
-C:\Cs\Eobotics project\Cpp\Maze solving Robot\Maze solving Robot.cpp(314,1): warning C4715: 'left_wall_location': not all control paths return a value
-C:\Cs\Eobotics project\Cpp\Maze solving Robot\Maze solving Robot.cpp(347,1): warning C4715: 'right_wall_location': not all control paths return a value
-C:\Cs\Eobotics project\Cpp\Maze solving Robot\Maze solving Robot.cpp(381,1): warning C4715: 'front_wall_location': not all control paths return a value
-  Maze solving Robot.vcxproj -> C:\Cs\Eobotics project\Cpp\Maze solving Robot\x64\Debug\Maze solving Robot.exe
+C:\Roy car\Robot\Arduino-maze-solver\cppSimulation\Maze solving Robot\Maze solving Robot.cpp(263,1): warning C4715: 'new_direction': not all control paths return a value
+C:\Roy car\Robot\Arduino-maze-solver\cppSimulation\Maze solving Robot\Maze solving Robot.cpp(341,1): warning C4715: 'left_wall_location': not all control paths return a value
+C:\Roy car\Robot\Arduino-maze-solver\cppSimulation\Maze solving Robot\Maze solving Robot.cpp(374,1): warning C4715: 'right_wall_location': not all control paths return a value
+C:\Roy car\Robot\Arduino-maze-solver\cppSimulation\Maze solving Robot\Maze solving Robot.cpp(408,1): warning C4715: 'front_wall_location': not all control paths return a value
+  Maze solving Robot.vcxproj -> C:\Roy car\Robot\Arduino-maze-solver\cppSimulation\Maze solving Robot\x64\Debug\Maze solving Robot.exe
