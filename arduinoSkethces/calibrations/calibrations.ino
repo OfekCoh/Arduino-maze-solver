@@ -19,9 +19,12 @@ const int echoRight = A3;
 // Threshold distance (in cm)
 const int safeDistance  = 7;
 
-// movement duration
-#define ROTATION_DURATION 150
-#define FORWARD_DURATION 700
+// movement durations
+#define LEFT_ROTATION_DURATION 950
+#define FORWARD_FOR_LEFT_TURN_DURATION 125
+#define RIGHT_ROTATION_DURATION 1000
+#define FORWARD_FOR_RIGHT_TURN_DURATION 75
+#define FORWARD_DURATION 600
 
 // Function to measure distance from ultrasonic sensor
 long measureDistance(int trigPin, int echoPin) {
@@ -41,7 +44,7 @@ void setup() {
   // Initialize motors
   motor1.setSpeed(150); // Speed ranges from 0-255
   motor2.setSpeed(150);
-  motor3.setSpeed(150);
+  motor3.setSpeed(100);
   motor4.setSpeed(150);
 
   // Initialize ultrasonic sensor pins
@@ -55,25 +58,6 @@ void setup() {
   pinMode(echoRight, INPUT);
 
   Serial.begin(9600); // For debugging
-
-  // delay(1000);
-  // motor1.run(FORWARD);
-  // delay(2000);
-  // motor1.run(RELEASE);
-  // delay(1000);
-  // motor2.run(FORWARD);
-  // delay(2000);
-  // motor2.run(RELEASE);
-  // delay(1000);
-  // motor3.run(FORWARD);
-  // delay(2000);
-  // motor3.run(RELEASE);
-  // delay(1000);
-  // motor4.run(FORWARD);
-  // delay(2000);
-  // motor4.run(RELEASE);
-
-
 }
 
 // Function to stop all motors
@@ -86,16 +70,15 @@ void stopMotors() {
 }
 
 // Function to move forward
-void moveForward() {
+void moveForward(int duration) {
   Serial.println("farward ");
   motor1.run(FORWARD);
   motor2.run(FORWARD);
   motor3.run(FORWARD);
   motor4.run(FORWARD);
-  delay(FORWARD_DURATION);
+  delay(duration);
   stopMotors();
 }
-
 
 // Function to rotate left
 void rotateLeft() {
@@ -104,7 +87,7 @@ void rotateLeft() {
   motor2.run(FORWARD);
   motor3.run(BACKWARD);
   motor4.run(FORWARD);
-  delay(ROTATION_DURATION);
+  delay(LEFT_ROTATION_DURATION);
   stopMotors();
 }
 
@@ -115,24 +98,31 @@ void rotateRight() {
   motor2.run(BACKWARD);
   motor3.run(FORWARD);
   motor4.run(BACKWARD);
-  delay(ROTATION_DURATION);
+  delay(RIGHT_ROTATION_DURATION);
   stopMotors();
 }
 
 //turn left test
-void turnLeft(long leftDistance){
-  long frontDistance = measureDistance(trigFront, echoFront);
-  while(abs(frontDistance - leftDistance) >= 2){
-    frontDistance = measureDistance(trigFront, echoFront);
-    Serial.print("left distance: "); Serial.print(leftDistance); Serial.print(" "); Serial.print("front distance: "); Serial.println(frontDistance); 
-    rotateLeft();
-  }
+void turnLeft(){
+  // moveForward(FORWARD_FOR_LEFT_TURN_DURATION);
+  // delay(100);
+  rotateLeft();
+  // delay(100);
+  // moveForward(FORWARD_FOR_LEFT_TURN_DURATION);
+}
+
+void turnRight(){
+  moveForward(FORWARD_FOR_RIGHT_TURN_DURATION);
+  rotateRight();
   
 }
 
+// for testing
 bool turn = true;
+
 // Loop
 void loop() {
+  
   // // Measure distances
   long frontDistance = measureDistance(trigFront, echoFront);
   long leftDistance = measureDistance(trigLeft, echoLeft);
@@ -144,9 +134,16 @@ void loop() {
   // Serial.print("Right: ");  Serial.println(rightDistance);
   
  
-  delay(12000);
+  delay(5000);
   if(turn){
-    turnLeft(leftDistance);
+    moveForward(FORWARD_DURATION);
+    delay(100);
+    turnRight();
+    delay(100);
+    moveForward(FORWARD_DURATION);
+    turnLeft();
+    delay(100);
+    moveForward(FORWARD_DURATION);
   }
   turn = false;
   delay(100); // Small delay for stability
