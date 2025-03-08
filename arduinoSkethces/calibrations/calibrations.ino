@@ -1,4 +1,4 @@
-#include <AFMotor.h> // Include motor shield library
+#include <AFMotor.h> // Include motor shield library.
 
 // Create motor objects
 AF_DCMotor motor1(4); // Front-Left Motor
